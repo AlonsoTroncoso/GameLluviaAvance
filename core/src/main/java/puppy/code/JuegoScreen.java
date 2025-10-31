@@ -8,7 +8,10 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class JuegoScreen implements Screen {
 
@@ -16,34 +19,35 @@ public class JuegoScreen implements Screen {
     private OrthographicCamera camera;
 
     // Fondos del juego
-    private Texture backgroundFrame1, backgroundFrame2;
-    private Texture backgroundGolf;
+    private Texture backgroundFrame1, backgroundFrame2, backgroundGolf, floorGolf, homeGolf, adGolf,
+    floorSaloon, dontGrabTheMeatBall, bigBeer, heno, pizzaSmart;
     private float animationTimer;
     private final float duracionFotograma = 0.1f;
 
     // Sheets de Items
-    private Texture sheetComida1, sheetComida2, sheetComida3, sheetComida4, sheetComida5;
-    private Texture sheetItemHostil;
-    private Texture sheetDoblePuntos;
-    private Texture sheetAntorchaHostil;
-    private Texture sheetVidaNoise, sheetVidaPeppino;
-    private Texture sheetHurtNoise, sheetHurtPeppino;
+    private Texture sheetComida1, sheetComida2, sheetComida3, sheetComida4, sheetComida5, sheetItemHostil, sheetDoblePuntos,
+        sheetAntorchaHostil, sheetVidaNoise, sheetVidaPeppino, sheetHurtNoise, sheetHurtPeppino;
+
     private IJugador jugador;
     private Lluvia lluvia;
+    private Animation<TextureRegion> greaseBallAnimation, meatBallAnimation;
+    private float greaseBallTimer = 0f;;
+    private float meatBallTimer = 0f;
 
     public Music musicaNivel;
+    private final int PLAYER_INITIAL_Y_OFFSET = 20;
 
     public JuegoScreen(GameLluvia game, GameLluvia.CharacterChoice personajeElegido) {
-        this.game = game;
 
-        sheetComida1 = new Texture(Gdx.files.internal("champinhon.png"));
-        sheetComida2 = new Texture(Gdx.files.internal("chorizo.png"));
-        sheetComida3 = new Texture(Gdx.files.internal("pinha.png"));
-        sheetComida4 = new Texture(Gdx.files.internal("queso.png"));
-        sheetComida5 = new Texture(Gdx.files.internal("tomate.png"));
-        sheetItemHostil = new Texture(Gdx.files.internal("papaElectrica.png"));
-        sheetAntorchaHostil = new Texture(Gdx.files.internal("antorchaHostil.png"));
-        sheetDoblePuntos = new Texture(Gdx.files.internal("doblepuntos.png"));
+        this.game = game;
+        sheetComida1 = game.sheetComida1;
+        sheetComida2 = game.sheetComida2;
+        sheetComida3 = game.sheetComida3;
+        sheetComida4 = game.sheetComida4;
+        sheetComida5 = game.sheetComida5;
+        sheetItemHostil = game.sheetItemHostil;
+        sheetAntorchaHostil = game.sheetAntorchaHostil;
+        sheetDoblePuntos = game.sheetDoblePuntos;
         sheetVidaNoise = game.sheetVidaNoise;
         sheetVidaPeppino = game.sheetVidaPeppino;
         sheetHurtNoise = game.sheetHurtNoise;
@@ -52,10 +56,35 @@ public class JuegoScreen implements Screen {
         if(game.nivelSeleccionado == GameLluvia.LevelChoice.NIVEL_1) {
             backgroundFrame1 = new Texture(Gdx.files.internal("fastFoodSaloon1.png"));
             backgroundFrame2 = new Texture(Gdx.files.internal("fastFoodSaloon2.png"));
+            floorSaloon = game.floorSaloon;
+            dontGrabTheMeatBall = game.dontGrabTheMeatBall;
+            heno = game.heno;
+            bigBeer = game.bigBeer;
+            pizzaSmart = game.pizzaSmart;
+            int meatBallFrameCount = 16;
+            int frameWidth = 128;
+            int frameHeight = 128;
+
+            meatBallAnimation = createAnimationFromSheet(game.sheetMeatBall,
+                meatBallFrameCount, frameWidth, frameHeight, 0.05f);
+
         }
 
-        else
+        else {
             backgroundGolf = new Texture(Gdx.files.internal("golf.png"));
+            floorGolf = game.floorGolf;
+            homeGolf = game.homeGolf;
+            adGolf = game.adGolf;
+
+            int greaseBallFrameCount = 12;
+            int frameWidth = 100;
+            int frameHeight = 100;
+
+            greaseBallAnimation =  createAnimationFromSheet(game.sheetIdleGreaseball,
+                greaseBallFrameCount, frameWidth, frameHeight, 0.05f);
+
+
+        }
 
         animationTimer = 0f;
 
@@ -66,7 +95,7 @@ public class JuegoScreen implements Screen {
         if (game.nivelSeleccionado == GameLluvia.LevelChoice.NIVEL_1)
             musicaNivel = Gdx.audio.newMusic(Gdx.files.internal("yeehaw.mp3"));
 
-         else  // NIVEL_2
+         else // NIVEL_2
             musicaNivel = Gdx.audio.newMusic(Gdx.files.internal("goodEatin.mp3"));
 
         musicaNivel.setLooping(true);
@@ -80,8 +109,14 @@ public class JuegoScreen implements Screen {
                 game.sheetDashNoise,
                 game.hurtNoiseSound,
                 game.vidaNoiseSound,
+                game.vidaNoiseSound2,
+                game.vidaNoiseSound3,
+                game.vidaNoiseSound4,
+                game.vidaNoiseSound5,
                 game.burningNoiseSound,
                 game.dashSound,
+                game.sonidoGolpeNoise,
+                game.hurtNoiseSound2,
                 Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.X
             );
         }
@@ -96,18 +131,25 @@ public class JuegoScreen implements Screen {
                 game.sheetDashPeppino,
                 game.hurtPeppinoSound,
                 game.vidaPeppinoSound,
+                game.vidaPeppinoSound2,
+                game.vidaPeppinoSound3,
                 game.burningPeppinoSound,
+                game.burningPeppinoSound2,
+                game.burningPeppinoSound3,
                 game.dashSound,
+                game.sonidoGolpe,
+                game.hurtPeppinoSound2,
                 Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.X
             );
         }
 
         // Creación de Lluvia
-        lluvia = new Lluvia(
+        CreadorItems creadorItems = new CreadorItems(
             sheetComida1, sheetComida2, sheetComida3, sheetComida4, sheetComida5,
             sheetItemHostil, sheetAntorchaHostil,sheetDoblePuntos, sheetVidaNoise, sheetVidaPeppino,
-            personajeElegido, dropSound, powerupSound
-        );
+            personajeElegido, dropSound, powerupSound);
+
+        lluvia = new Lluvia(creadorItems);
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
@@ -124,6 +166,7 @@ public class JuegoScreen implements Screen {
         jugador.actualizar(delta);
 
         animationTimer += delta;
+
         if(animationTimer >= duracionFotograma * 2)
             animationTimer = 0f;
 
@@ -131,14 +174,41 @@ public class JuegoScreen implements Screen {
         game.batch.begin();
 
         if(game.nivelSeleccionado == GameLluvia.LevelChoice.NIVEL_1) {
-            if(animationTimer<duracionFotograma)
-                game.batch.draw(backgroundFrame1,0, 0, 800, 480);
-            else
+            meatBallTimer += delta;
+            TextureRegion currentMeatBallFrame = meatBallAnimation.getKeyFrame(meatBallTimer, true);
+
+            if (animationTimer < duracionFotograma) {
+                game.batch.draw(backgroundFrame1, 0, 0, 800, 480);
+                game.batch.draw(floorSaloon, 0, 0, 800, 30);
+                game.batch.draw(dontGrabTheMeatBall, 10, 30, 172, 167);
+                game.batch.draw(currentMeatBallFrame, 185, -2, 128, 128);
+                game.batch.draw(heno, 720, 25, 73, 76);
+                game.batch.draw(bigBeer,680, 30, 26, 47);
+                game.batch.draw(pizzaSmart, 300, 30, 361, 276);
+            }
+
+            else {
                 game.batch.draw(backgroundFrame2, 0, 0, 800, 480);
+                game.batch.draw(floorSaloon, 0, 0, 800, 30);
+                game.batch.draw(dontGrabTheMeatBall, 10, 30, 172, 167);
+                game.batch.draw(currentMeatBallFrame, 185, -2, 128, 128);
+                game.batch.draw(heno, 720, 25, 73, 76);
+                game.batch.draw(bigBeer,680, 30, 26, 47);
+                game.batch.draw(pizzaSmart, 300, 30, 361, 276);
+            }
         }
 
         else {
-                game.batch.draw(backgroundGolf, 0, 0, 800, 480);
+            greaseBallTimer += delta;
+            TextureRegion currentGreaseBallAnimation = greaseBallAnimation.getKeyFrame(greaseBallTimer, true);
+            if (!currentGreaseBallAnimation.isFlipX())
+                currentGreaseBallAnimation.flip(true, false);
+
+            game.batch.draw(backgroundGolf, 0, 0, 800, 480);
+            game.batch.draw(floorGolf, 0, 0, 800, 30);
+            game.batch.draw(homeGolf, 0, 30, 160, 222);
+            game.batch.draw(adGolf, 300, 30, 206, 228);
+            game.batch.draw(currentGreaseBallAnimation, 630, 25, 100, 100);
         }
 
 
@@ -179,23 +249,28 @@ public class JuegoScreen implements Screen {
         }
     }
 
+    private Animation<TextureRegion> createAnimationFromSheet(Texture sheet, int frameCount, int frameWidth, int frameHeight, float frameDuration) {
+        TextureRegion[][] tmp = TextureRegion.split(sheet,
+            frameWidth,
+            frameHeight);
+
+        TextureRegion[] frames = new TextureRegion[frameCount];
+        int index = 0;
+        for (int j = 0; j < frameCount; j++)
+            frames[index++] = tmp[0][j];
+
+        Animation<TextureRegion> animation = new Animation<TextureRegion>(frameDuration, frames);
+        animation.setPlayMode(Animation.PlayMode.LOOP);
+
+
+
+        return animation;
+    }
+
     @Override
     public void dispose() {
 
         jugador.destruir();
-
-        backgroundFrame1.dispose();
-        backgroundFrame2.dispose();
-
-        sheetComida1.dispose();
-        sheetComida2.dispose();
-        sheetComida3.dispose();
-        sheetComida4.dispose();
-        sheetComida5.dispose();
-
-        sheetItemHostil.dispose();
-        sheetAntorchaHostil.dispose();
-        sheetDoblePuntos.dispose();
 
         if (backgroundFrame1 != null)
             backgroundFrame1.dispose();
@@ -205,6 +280,8 @@ public class JuegoScreen implements Screen {
 
         if (backgroundGolf != null)
             backgroundGolf.dispose();
+
+
 
         if (musicaNivel != null)
             musicaNivel.dispose();

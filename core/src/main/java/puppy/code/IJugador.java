@@ -1,4 +1,4 @@
-// Archivo: IJugador.java
+
 package puppy.code;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;

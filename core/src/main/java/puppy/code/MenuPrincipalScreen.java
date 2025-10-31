@@ -1,9 +1,9 @@
 package puppy.code;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input; // Importante para las teclas
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Sound; // Importante para el sonido de selección
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
@@ -43,7 +43,7 @@ public class MenuPrincipalScreen implements Screen {
     @Override
     public void show() {
 
-        if (!game.musicaMenu.isPlaying()) {
+        if (game.musicaMenu!=null && !game.musicaMenu.isPlaying()) {
             game.musicaMenu.play();
         }
     }
@@ -69,7 +69,7 @@ public class MenuPrincipalScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             switch (opcionSeleccionada) {
                 case 0: // JUGAR
-                    game.musicaMenu.stop();
+
                     game.setScreen(new LevelSelectScreen(game)); // Va a la selección de nivel
                     dispose();
                     break;

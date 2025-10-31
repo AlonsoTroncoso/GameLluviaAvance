@@ -2,8 +2,8 @@ package puppy.code;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.audio.Sound;
-
-public class DoblePuntos extends ItemCaido {
+//casi ni cambia por la nueva clase intermedia
+public class DoblePuntos extends ItemPowerUp {
     private Sound grabDoblePuntosSound;
 
     public DoblePuntos(Texture sheet, Sound grabDoblePuntosSound) {

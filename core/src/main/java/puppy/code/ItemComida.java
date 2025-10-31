@@ -3,22 +3,23 @@ package puppy.code;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.audio.Sound;
 
-//la idea es que en cada comida hace lo mismo pero cambia el sprite y el frame count
-//entonces asi la comida quedá mas cortita y es fácil incluir nueva comida o clases con el mismo comportamiento
-
 public abstract class ItemComida extends ItemCaido {
-    
-    private Sound comerSound;
-    
-    public ItemComida(Texture sheet, int frameCount, Sound comerSound) {
-        super(sheet, frameCount, 32, 32, 0.1f, 300f); //estos numeros no cambian asi que entran asi nomas
+
+    protected Sound comerSound;
+
+    public ItemComida(Texture sheet, int frameCount, int frameWidth, int frameHeight, float frameDuration, float velocidadCaida, Sound comerSound) {
+        // heredo todo lo de la padre
+        super(sheet, frameCount, frameWidth, frameHeight, frameDuration, velocidadCaida);
+        //el sonido es unico
         this.comerSound = comerSound;
     }
-    
-    //efecto onHit que se repite en todas las comidas
+    //esta es el metodo que se repite en todas las clases comida
+    //la idea es que el codigo no se repita tanto, al menos eso dicen los POO
+    //ahora todas las comidas heredan de esta, en vez de estar todo desordenado con una abstracta
     @Override
     public void onHit(IJugador jugador) {
-        jugador.sumarPuntos(10); // Dan puntos
+        jugador.sumarPuntos(10); // Lógica centralizada
         comerSound.play();
     }
+
 }

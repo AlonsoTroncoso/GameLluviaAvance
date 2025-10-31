@@ -14,9 +14,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Noise implements IJugador {
 
     private Rectangle player;
-    private Sound sonidoHerido;
-    private Sound vidaSound;
-    private Sound sonidoQuemandose;
+    private Sound sonidoHerido, vidaSound, vidaSound2, vidaSound3, vidaSound4, vidaSound5 ,sonidoQuemandose,
+        sonidoGolpe, sonidoHerido2;
+
     private int vidas = 3;
     private int puntos = 0;
     private int velx = 425;
@@ -32,22 +32,14 @@ public class Noise implements IJugador {
     private float tiempoDoblePuntos;
 
 
-    private Texture idleSheet;
-    private Texture moveSheet;
-    private Texture sheetQuemado;
-    private Texture sheetRecuperando;
-    private Texture sheetGolpeado;
-    private Texture sheetDash;
-    private Animation<TextureRegion> dashAnimation;
+    private Texture idleSheet, moveSheet, sheetQuemado, sheetRecuperando, sheetGolpeado, sheetDash;
+
     private Sound dashSound;
     private int keyDash;
     private float dashVelX= 650f;
     private boolean dashHaciaDerecha;
-    private Animation<TextureRegion> idleAnimation;
-    private Animation<TextureRegion> moveAnimation;
-    private Animation<TextureRegion> quemadoAnimation;
-    private Animation<TextureRegion> recuperandoAnimation;
-    private Animation<TextureRegion> golpeadoAnimation;
+    private Animation<TextureRegion> idleAnimation, moveAnimation, quemadoAnimation,recuperandoAnimation, golpeadoAnimation,
+        dashAnimation;
 
 
     private enum State {
@@ -72,18 +64,26 @@ public class Noise implements IJugador {
     private int keyDerecha;
 
     public Noise(Texture idleSheet, Texture moveSheet, Texture sheetQuemado, Texture sheetRecuperando,
-                 Texture sheetGolpeado, Texture sheetDash, Sound ss, Sound vs, Sound sq, Sound ds,
+                 Texture sheetGolpeado, Texture sheetDash, Sound ss, Sound vs, Sound vs2, Sound vs3, Sound vs4, Sound vs5,
+                 Sound sq, Sound ds, Sound sg, Sound ss2,
                  int keyIzquierda, int keyDerecha, int keyDash) {
+
         this.idleSheet = idleSheet;
         this.moveSheet = moveSheet;
         this.sheetQuemado = sheetQuemado;
         this.sheetRecuperando = sheetRecuperando;
         this.sheetGolpeado = sheetGolpeado;
         this.sheetDash = sheetDash;
-        sonidoHerido = ss;
+        this.sonidoHerido = ss;
         this.vidaSound = vs;
+        this.vidaSound2 = vs2;
+        this.vidaSound3 = vs3;
+        this.vidaSound4 = vs4;
+        this.vidaSound5 = vs5;
         this.sonidoQuemandose = sq;
         this.dashSound = ds;
+        this.sonidoGolpe = sg;
+        this.sonidoHerido2 = ss2;
         this.keyIzquierda = keyIzquierda;
         this.keyDerecha = keyDerecha;
         this.keyDash = keyDash;
@@ -138,7 +138,7 @@ public class Noise implements IJugador {
         float nuevoAncho = 96;
         float nuevoAlto = 96;
         player.x = 800 / 2 - nuevoAncho / 2;
-        player.y = 20;
+        player.y = 25;
         player.width = nuevoAncho;
         player.height = nuevoAlto;
 
@@ -191,7 +191,16 @@ public class Noise implements IJugador {
             // Impulso SUAVE
             velYRebote = 300f;
             velXRebote = facingRight ? -450f : 450f;
-            sonidoHerido.play();
+
+            if(MathUtils.randomBoolean()) {
+                sonidoHerido.play();
+                sonidoGolpe.play();
+            }
+
+            else {
+                sonidoHerido2.play();
+                sonidoGolpe.play();
+            }
         }
     }
 
@@ -200,7 +209,24 @@ public class Noise implements IJugador {
         if (vidas >= 5)
             return;
         vidas += cantidad;
-        vidaSound.play();
+
+        int sonidoRNG = MathUtils.random(1, 5);
+
+        if(sonidoRNG==1)
+            vidaSound.play();
+
+        else if(sonidoRNG==2)
+            vidaSound2.play();
+
+        else if(sonidoRNG==3)
+            vidaSound3.play();
+
+        else if(sonidoRNG==4)
+            vidaSound4.play();
+
+        else
+            vidaSound5.play();
+
     }
 
     @Override
@@ -298,13 +324,41 @@ public class Noise implements IJugador {
 
 
         switch (currentState) {
-            case GOLPEADO_REBOTANDO:
-            case QUEMADO_REBOTANDO:
 
+            case GOLPEADO_REBOTANDO:
                 velYRebote += GRAVEDAD * delta;
                 player.x += velXRebote * delta;
                 player.y += velYRebote * delta;
 
+                if (player.x < 0) {
+                    player.x = 0;
+                    velXRebote *= -0.98f;
+                }
+
+                else if (player.x + player.width > 800) {
+                    player.x = 800 - player.width;
+                    velXRebote *= -0.98f;
+                }
+
+
+                if (player.y + player.height > 480) {
+                    player.y = 480 - player.height;
+                    velYRebote *= -0.9f;
+                }
+
+
+                if (player.y <= 20) {
+                    player.y = 20;
+                    currentState = State.IDLE;
+                    invencible = false;
+                    stateTimer = 0f;
+                }
+                break;
+
+            case QUEMADO_REBOTANDO:
+                velYRebote += GRAVEDAD * delta;
+                player.x += velXRebote * delta;
+                player.y += velYRebote * delta;
 
                 if (player.x < 0) {
                     player.x = 0;
@@ -321,12 +375,12 @@ public class Noise implements IJugador {
                     velYRebote *= -0.9f;
                 }
 
+
                 if (player.y <= 20) {
                     player.y = 20;
-                    currentState =  Noise.State.RECUPERANDOSE_SUELO;
+                    currentState = State.RECUPERANDOSE_SUELO;
                     stateTimer = 0f;
                 }
-
                 break;
 
             case RECUPERANDOSE_SUELO:

@@ -13,19 +13,18 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Peppino implements IJugador {
 
-
     private Rectangle player;
-    private Sound sonidoHerido;
-    private Sound vidaSound;
-    private Sound sonidoQuemandose;
+    private Sound sonidoHerido, vidaSound, vidaSound2, vidaSound3, sonidoQuemandose, sonidoQuemandose2,
+        sonidoQuemandose3, sonidoGolpe, dashSound, sonidoHerido2;
+
     private int vidas = 5;
     private int puntos = 0;
     private int velx = 425;
 
-    private float tiempoInvencibleMax = 1.0f;
+    private float tiempoInvencibleMax = 0.5f;
     private float tiempoInvencible;
     private float flickerTimer = 0f;
-    private final float FLICKER_RATE = 0.1f;
+    private final float FLICKER_RATE = 0.05f;
 
 
     private boolean doblePuntos = false;
@@ -33,19 +32,10 @@ public class Peppino implements IJugador {
     private float tiempoDoblePuntos;
 
 
-    private Texture idleSheet;
-    private Texture moveSheet;
-    private Texture sheetQuemado;
-    private Texture sheetRecuperando;
-    private Texture sheetGolpeado;
-    private Animation<TextureRegion> idleAnimation;
-    private Animation<TextureRegion> moveAnimation;
-    private Animation<TextureRegion> quemadoAnimation;
-    private Animation<TextureRegion> recuperandoAnimation;
-    private Animation<TextureRegion> golpeadoAnimation;
-    private Texture sheetDash;
-    private Animation<TextureRegion> dashAnimation;
-    private Sound dashSound;
+    private Texture idleSheet, moveSheet, sheetQuemado, sheetRecuperando, sheetGolpeado, sheetDash;
+    private Animation<TextureRegion> idleAnimation, moveAnimation, quemadoAnimation, recuperandoAnimation,
+        golpeadoAnimation, dashAnimation;
+
     private int keyDash;
     private float dashVelX = 690f;
     private boolean dashHaciaDerecha;
@@ -73,18 +63,26 @@ public class Peppino implements IJugador {
     private int keyDerecha;
 
     public Peppino(Texture idleSheet, Texture moveSheet, Texture sheetQuemado, Texture sheetRecuperando,
-                   Texture sheetGolpeado, Texture sheetDash, Sound ss, Sound vs, Sound sq, Sound ds,
+                   Texture sheetGolpeado, Texture sheetDash, Sound ss, Sound vs, Sound vs2, Sound vs3,
+                   Sound sq, Sound sq2, Sound sq3, Sound ds, Sound sg, Sound ss2,
                    int keyIzquierda, int keyDerecha, int keyDash) {
+
         this.idleSheet = idleSheet;
         this.moveSheet = moveSheet;
         this.sheetQuemado = sheetQuemado;
         this.sheetRecuperando = sheetRecuperando;
         this.sheetGolpeado = sheetGolpeado;
         this.sheetDash = sheetDash;
-        sonidoHerido = ss;
+        this.sonidoHerido = ss;
         this.vidaSound = vs;
+        this.vidaSound2 = vs2;
+        this.vidaSound3 = vs3;
         this.sonidoQuemandose = sq;
+        this.sonidoQuemandose2 = sq2;
+        this.sonidoQuemandose3 = sq3;
         this.dashSound = ds;
+        this.sonidoGolpe = sg;
+        this.sonidoHerido2 = ss2;
         this.keyIzquierda = keyIzquierda;
         this.keyDerecha = keyDerecha;
         this.keyDash = keyDash;
@@ -106,7 +104,7 @@ public class Peppino implements IJugador {
 
     @Override
     public void actualizar(float delta) {
-        // Actualiza timer de doble puntos
+
         if (doblePuntos) {
             tiempoDoblePuntos -= delta;
             if (tiempoDoblePuntos <= 0)
@@ -121,7 +119,7 @@ public class Peppino implements IJugador {
         float nuevoAncho = 96;
         float nuevoAlto = 96;
         player.x = 800 / 2 - nuevoAncho / 2;
-        player.y = 20;
+        player.y = 25;
         player.width = nuevoAncho;
         player.height = nuevoAlto;
 
@@ -162,18 +160,37 @@ public class Peppino implements IJugador {
             invencible = true;
             stateTimer = 0f;
 
-            velYRebote = 1000f;
-            velXRebote = facingRight ? -700f : 700f;
-            sonidoQuemandose.play();
+            velYRebote = 950f;
+            velXRebote = facingRight ? -900f : 900f;
 
-        } else {
+            int sonidoRNG = MathUtils.random(1, 3);
+            if(sonidoRNG==1)
+                sonidoQuemandose.play();
+
+            else if(sonidoRNG==2)
+                sonidoQuemandose2.play();
+
+            else
+                sonidoQuemandose3.play();
+
+        }
+
+        else {
             currentState = State.GOLPEADO_REBOTANDO;
             invencible = true;
             stateTimer = 0f;
             velYRebote = 250f;
             velXRebote = facingRight ? -450f : 450f;
 
-            sonidoHerido.play();
+            if(MathUtils.randomBoolean()) {
+                sonidoHerido.play();
+                sonidoGolpe.play();
+            }
+
+            else {
+                sonidoHerido2.play();
+                sonidoGolpe.play();
+            }
         }
     }
 
@@ -190,7 +207,16 @@ public class Peppino implements IJugador {
         if (vidas >= 10)
             return;
         vidas += cantidad;
-        vidaSound.play();
+
+        int sonidoRNG = MathUtils.random(1, 3);
+        if(sonidoRNG==1)
+            vidaSound.play();
+
+        else if(sonidoRNG==2)
+            vidaSound2.play();
+
+        else
+            vidaSound3.play();
     }
 
     @Override
@@ -274,12 +300,13 @@ public class Peppino implements IJugador {
     @Override
     public void actualizarMovimiento() {
 
-        State previousState = currentState;
+        Peppino.State previousState = currentState;
         float delta = Gdx.graphics.getDeltaTime();
 
+
         switch (currentState) {
+
             case GOLPEADO_REBOTANDO:
-            case QUEMADO_REBOTANDO:
                 velYRebote += GRAVEDAD * delta;
                 player.x += velXRebote * delta;
                 player.y += velYRebote * delta;
@@ -302,39 +329,66 @@ public class Peppino implements IJugador {
 
                 if (player.y <= 20) {
                     player.y = 20;
-                    currentState = State.RECUPERANDOSE_SUELO;
+                    currentState = Peppino.State.IDLE;
+                    invencible = false;
+                    stateTimer = 0f;
+                }
+                break;
+
+            case QUEMADO_REBOTANDO:
+
+                velYRebote += GRAVEDAD * delta;
+                player.x += velXRebote * delta;
+                player.y += velYRebote * delta;
+
+                if (player.x < 0) {
+                    player.x = 0;
+                    velXRebote *= -0.98f;
+                }
+
+                else if (player.x + player.width > 800) {
+                    player.x = 800 - player.width;
+                    velXRebote *= -0.98f;
+                }
+
+                if (player.y + player.height > 480) {
+                    player.y = 480 - player.height;
+                    velYRebote *= -0.9f;
+                }
+
+                if (player.y <= 20) {
+                    player.y = 20;
+                    currentState = Peppino.State.RECUPERANDOSE_SUELO;
                     stateTimer = 0f;
                 }
                 break;
 
             case RECUPERANDOSE_SUELO:
+
                 if (recuperandoAnimation.isAnimationFinished(stateTimer)) {
-                    currentState = State.IDLE;
+                    currentState = Peppino.State.IDLE;
                     invencible = false;
                 }
-
                 break;
 
             case DASHING:
+
                 float desplazamientoX = dashVelX * delta;
                 player.x += dashHaciaDerecha ? desplazamientoX : -desplazamientoX;
 
-                if (player.x < 0)
-                    player.x = 0;
-
-                if (player.x > 800 - player.width)
-                    player.x = 800 - player.width;
+                if (player.x < 0) player.x = 0;
+                if (player.x > 800 - player.width) player.x = 800 - player.width;
 
                 boolean quiereCancelar = (dashHaciaDerecha && Gdx.input.isKeyPressed(this.keyIzquierda)) ||
                     (!dashHaciaDerecha && Gdx.input.isKeyPressed(this.keyDerecha));
 
                 boolean animacionDashTerminada = dashAnimation.isAnimationFinished(stateTimer);
+
                 if (quiereCancelar)
-                    currentState = State.MOVING;
+                    currentState = Peppino.State.MOVING;
 
                 else if(animacionDashTerminada)
-                    currentState = State.IDLE;
-
+                    currentState = Peppino.State.IDLE;
 
                 break;
 
@@ -342,10 +396,8 @@ public class Peppino implements IJugador {
             case MOVING:
             default:
 
-
-
                 if (Gdx.input.isKeyJustPressed(this.keyDash)) {
-                    currentState = State.DASHING;
+                    currentState = Peppino.State.DASHING;
                     dashHaciaDerecha = facingRight;
                     dashSound.play();
                     stateTimer = 0f;
@@ -354,22 +406,20 @@ public class Peppino implements IJugador {
                 else {
                     if (Gdx.input.isKeyPressed(this.keyIzquierda)) {
                         player.x -= velx * delta;
-                        currentState = State.MOVING;
+                        currentState = Peppino.State.MOVING;
                         facingRight = false;
-
                     }
 
                     else if (Gdx.input.isKeyPressed(this.keyDerecha)) {
                         player.x += velx * delta;
-                        currentState = State.MOVING;
+                        currentState = Peppino.State.MOVING;
                         facingRight = true;
                     }
 
                     else {
-                        if (previousState == State.MOVING || previousState == State.IDLE)
-                            currentState = State.IDLE;
+                        if (previousState == Peppino.State.MOVING || previousState == Peppino.State.IDLE)
+                            currentState = Peppino.State.IDLE;
                     }
-
 
                     if (player.x < 0)
                         player.x = 0;
