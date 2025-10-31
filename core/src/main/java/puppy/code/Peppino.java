@@ -10,19 +10,23 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-// Peppino TAMBIÉN implementa el "contrato" de IJugador
+
 public class Peppino implements IJugador {
 
 
     private Rectangle player;
     private Sound sonidoHerido;
     private Sound vidaSound;
+    private Sound sonidoQuemandose;
     private int vidas = 5;
     private int puntos = 0;
-    private int velx = 500; // Es más rápido
-    private boolean herido = false;
-    private int tiempoHeridoMax = 50;
-    private int tiempoHerido;
+    private int velx = 425;
+
+    private float tiempoInvencibleMax = 1.0f;
+    private float tiempoInvencible;
+    private float flickerTimer = 0f;
+    private final float FLICKER_RATE = 0.1f;
+
 
     private boolean doblePuntos = false;
     private float tiempoDoblePuntosMax = 5.0f;
@@ -31,87 +35,84 @@ public class Peppino implements IJugador {
 
     private Texture idleSheet;
     private Texture moveSheet;
+    private Texture sheetQuemado;
+    private Texture sheetRecuperando;
+    private Texture sheetGolpeado;
     private Animation<TextureRegion> idleAnimation;
     private Animation<TextureRegion> moveAnimation;
+    private Animation<TextureRegion> quemadoAnimation;
+    private Animation<TextureRegion> recuperandoAnimation;
+    private Animation<TextureRegion> golpeadoAnimation;
+    private Texture sheetDash;
+    private Animation<TextureRegion> dashAnimation;
+    private Sound dashSound;
+    private int keyDash;
+    private float dashVelX = 690f;
+    private boolean dashHaciaDerecha;
+
+    private enum State {
+        IDLE,
+        MOVING,
+        QUEMADO_REBOTANDO,
+        GOLPEADO_REBOTANDO,
+        RECUPERANDOSE_SUELO,
+        DASHING
+    }
+
     private State currentState;
     private float stateTimer;
     private boolean facingRight;
 
 
+    private float velXRebote;
+    private float velYRebote;
+    private final float GRAVEDAD = -900f;
+    private boolean invencible = false;
+
     private int keyIzquierda;
     private int keyDerecha;
 
-    private enum State {
-        IDLE,
-        MOVING
-    }
-
-    // --- CONSTRUCTOR ---
-    public Peppino(Texture idleSheet, Texture moveSheet, Sound ss, Sound vidaSound, int keyIzquierda, int keyDerecha) {
+    public Peppino(Texture idleSheet, Texture moveSheet, Texture sheetQuemado, Texture sheetRecuperando,
+                   Texture sheetGolpeado, Texture sheetDash, Sound ss, Sound vs, Sound sq, Sound ds,
+                   int keyIzquierda, int keyDerecha, int keyDash) {
         this.idleSheet = idleSheet;
         this.moveSheet = moveSheet;
+        this.sheetQuemado = sheetQuemado;
+        this.sheetRecuperando = sheetRecuperando;
+        this.sheetGolpeado = sheetGolpeado;
+        this.sheetDash = sheetDash;
         sonidoHerido = ss;
-        this.vidaSound = vidaSound;
+        this.vidaSound = vs;
+        this.sonidoQuemandose = sq;
+        this.dashSound = ds;
         this.keyIzquierda = keyIzquierda;
         this.keyDerecha = keyDerecha;
+        this.keyDash = keyDash;
         this.doblePuntos = false;
     }
 
-    // --- MÉTODOS DE LA INTERFAZ (GETTERS/SETTERS) ---
+
+    @Override public int getVidas() { return vidas; }
+    @Override public int getPuntos() { return puntos; }
+    @Override public Rectangle getArea() { return player; }
+    @Override public boolean estaDoblePuntos() { return doblePuntos; }
+    @Override public float getTiempoDoblePuntos() { return tiempoDoblePuntos; }
+    @Override public boolean estaHerido() { return false; }
 
     @Override
-    public int getVidas() {
-        return vidas;
+    public boolean estaEnDash() {
+        return currentState == State.DASHING;
     }
-
-    @Override
-    public int getPuntos() {
-        return puntos;
-    }
-
-    @Override
-    public Rectangle getArea() {
-        return player;
-    }
-
-    @Override
-    public void sumarPuntos(int pp) {
-        if (doblePuntos)
-            puntos += (pp * 2);
-        else
-            puntos += pp;
-    }
-
-    @Override
-    public void activarDoblePuntos() {
-        doblePuntos = true;
-        tiempoDoblePuntos = tiempoDoblePuntosMax;
-    }
-
-    @Override
-    public boolean estaDoblePuntos() {
-        return doblePuntos;
-    }
-
-    @Override
-    public float getTiempoDoblePuntos() {
-        return tiempoDoblePuntos;
-    }
-
-    @Override
-    public boolean estaHerido() {
-        return herido;
-    }
-
-    // --- MÉTODOS DE LA INTERFAZ (ACCIONES) ---
 
     @Override
     public void actualizar(float delta) {
+        // Actualiza timer de doble puntos
         if (doblePuntos) {
             tiempoDoblePuntos -= delta;
             if (tiempoDoblePuntos <= 0)
                 doblePuntos = false;
         }
+
     }
 
     @Override
@@ -124,39 +125,82 @@ public class Peppino implements IJugador {
         player.width = nuevoAncho;
         player.height = nuevoAlto;
 
-        // (¡Asegúrate de que estos números coincidan con "nuevo_personaje_idle_sheet.png"!)
-        int idleFrameCount = 3;
-        float idleFrameDuration = 0.1f;
-        idleAnimation = createAnimationFromSheet(idleSheet, idleFrameCount, 100, 100, idleFrameDuration);
 
-        // (¡Asegúrate de que estos números coincidan con "nuevo_personaje_move_sheet.png"!)
-        int moveFrameCount = 12;
-        float moveFrameDuration = 0.1f;
-        moveAnimation = createAnimationFromSheet(moveSheet, moveFrameCount, 100, 100, moveFrameDuration);
+
+        idleAnimation = createAnimationFromSheet(idleSheet, 17, 100, 100, 0.05f); // Tus números
+        moveAnimation = createAnimationFromSheet(moveSheet, 12, 100, 100, 0.05f); // Tus números
+        quemadoAnimation = createAnimationFromSheet(sheetQuemado, 5, 100, 100, 0.05f); // Tus números
+        recuperandoAnimation = createAnimationFromSheet(sheetRecuperando, 14, 100, 100, 0.05f); // Tus números
+        recuperandoAnimation.setPlayMode(Animation.PlayMode.NORMAL);
+
+        int golpeadoFrameCount = 11;
+        float golpeadoFrameDuration = 0.05f;
+        golpeadoAnimation = createAnimationFromSheet(sheetGolpeado, golpeadoFrameCount, 100, 100, golpeadoFrameDuration); // Ejemplo tamaño
+
+        int dashFrameCount = 12;
+        float dashFrameDuration = 0.05f;
+        dashAnimation = createAnimationFromSheet(sheetDash, dashFrameCount, 100, 100, dashFrameDuration);
+        dashAnimation.setPlayMode(Animation.PlayMode.NORMAL);
 
         currentState = State.IDLE;
         stateTimer = 0f;
         facingRight = true;
+        invencible = false;
     }
 
     @Override
-    public void dañar() {
+    public void dañar(String tipoDano) {
 
-        if (vidas <= 0)
+        if (invencible || currentState == State.QUEMADO_REBOTANDO || currentState == State.GOLPEADO_REBOTANDO || currentState == State.RECUPERANDOSE_SUELO || vidas <= 0)
             return;
 
         vidas--;
-        herido = true;
-        tiempoHerido = tiempoHeridoMax;
-        sonidoHerido.play();
+
+        if (tipoDano.equals("QUEMADURA")) {
+
+            currentState = State.QUEMADO_REBOTANDO;
+            invencible = true;
+            stateTimer = 0f;
+
+            velYRebote = 1000f;
+            velXRebote = facingRight ? -700f : 700f;
+            sonidoQuemandose.play();
+
+        } else {
+            currentState = State.GOLPEADO_REBOTANDO;
+            invencible = true;
+            stateTimer = 0f;
+            velYRebote = 250f;
+            velXRebote = facingRight ? -450f : 450f;
+
+            sonidoHerido.play();
+        }
+    }
+
+    @Override
+    public void sumarPuntos(int pp) {
+        if (doblePuntos)
+            puntos += (pp * 2);
+        else
+            puntos += pp;
     }
 
     @Override
     public void sumarVida(int cantidad) {
-        if (vidas >= 10) // Límite de 10 vidas
+        if (vidas >= 10)
             return;
         vidas += cantidad;
         vidaSound.play();
+    }
+
+    @Override
+    public void activarDoblePuntos() {
+
+        if (!doblePuntos) {
+            doblePuntos = true;
+            tiempoDoblePuntos = tiempoDoblePuntosMax;
+
+        }
     }
 
     @Override
@@ -164,67 +208,204 @@ public class Peppino implements IJugador {
         stateTimer += Gdx.graphics.getDeltaTime();
         Animation<TextureRegion> currentAnimation;
 
-        if (currentState == State.MOVING)
-            currentAnimation = moveAnimation;
-        else
-            currentAnimation = idleAnimation;
 
-        TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTimer, true);
-
-        if (!facingRight && !currentFrame.isFlipX())
-            currentFrame.flip(true, false);
-        else if (facingRight && currentFrame.isFlipX())
-            currentFrame.flip(true, false);
-
-        if (!herido)
-            batch.draw(currentFrame, player.x, player.y, player.width, player.height);
-        else {
-            batch.draw(currentFrame, player.x, player.y + MathUtils.random(-5, 5), player.width, player.height);
-            tiempoHerido--;
-            if (tiempoHerido <= 0)
-                herido = false;
+        switch (currentState) {
+            case DASHING:
+                currentAnimation = dashAnimation;
+                break;
+            case GOLPEADO_REBOTANDO:
+                currentAnimation = golpeadoAnimation;
+                break;
+            case QUEMADO_REBOTANDO:
+                currentAnimation = quemadoAnimation;
+                break;
+            case RECUPERANDOSE_SUELO:
+                currentAnimation = recuperandoAnimation;
+                break;
+            case MOVING:
+                currentAnimation = moveAnimation;
+                break;
+            case IDLE:
+            default:
+                currentAnimation = idleAnimation;
+                break;
         }
+
+        TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTimer,
+            (currentState != State.RECUPERANDOSE_SUELO));
+
+        boolean shouldFaceRight;
+        if (currentState == State.QUEMADO_REBOTANDO || currentState == State.GOLPEADO_REBOTANDO)
+            shouldFaceRight = (velXRebote >= 0);
+
+        else if (currentState == State.RECUPERANDOSE_SUELO)
+            shouldFaceRight = true;
+
+        else
+            shouldFaceRight = facingRight;
+
+
+        if (!shouldFaceRight && !currentFrame.isFlipX())
+            currentFrame.flip(true, false);
+
+        else if (shouldFaceRight && currentFrame.isFlipX())
+            currentFrame.flip(true, false);
+
+
+
+        boolean dibujarSprite = true;
+
+        if (invencible && currentState != State.QUEMADO_REBOTANDO && currentState != State.GOLPEADO_REBOTANDO && currentState != State.RECUPERANDOSE_SUELO) {
+            flickerTimer += Gdx.graphics.getDeltaTime();
+            float cycleTime = FLICKER_RATE * 2;
+            if ((flickerTimer % cycleTime) > FLICKER_RATE)
+                dibujarSprite = false;
+
+        }
+        else
+            flickerTimer = 0f;
+
+
+        if (dibujarSprite)
+            batch.draw(currentFrame, player.x, player.y, player.width, player.height);
+
     }
 
     @Override
     public void actualizarMovimiento() {
-        if (Gdx.input.isKeyPressed(this.keyIzquierda)) {
-            player.x -= velx * Gdx.graphics.getDeltaTime(); // ¡Usa su velocidad de 500!
-            currentState = State.MOVING;
-            facingRight = false;
-        }
-        else if (Gdx.input.isKeyPressed(this.keyDerecha)) {
-            player.x += velx * Gdx.graphics.getDeltaTime(); // ¡Usa su velocidad de 500!
-            currentState = State.MOVING;
-            facingRight = true;
-        }
-        else
-            currentState = State.IDLE;
 
-        if (player.x < 0)
-            player.x = 0;
-        if (player.x > 800 - player.width)
-            player.x = 800 - player.width;
+        State previousState = currentState;
+        float delta = Gdx.graphics.getDeltaTime();
+
+        switch (currentState) {
+            case GOLPEADO_REBOTANDO:
+            case QUEMADO_REBOTANDO:
+                velYRebote += GRAVEDAD * delta;
+                player.x += velXRebote * delta;
+                player.y += velYRebote * delta;
+
+                if (player.x < 0) {
+                    player.x = 0;
+                    velXRebote *= -0.98f;
+                }
+
+                else if (player.x + player.width > 800) {
+                    player.x = 800 - player.width;
+                    velXRebote *= -0.98f;
+                }
+
+
+                if (player.y + player.height > 480) {
+                    player.y = 480 - player.height;
+                    velYRebote *= -0.9f;
+                }
+
+                if (player.y <= 20) {
+                    player.y = 20;
+                    currentState = State.RECUPERANDOSE_SUELO;
+                    stateTimer = 0f;
+                }
+                break;
+
+            case RECUPERANDOSE_SUELO:
+                if (recuperandoAnimation.isAnimationFinished(stateTimer)) {
+                    currentState = State.IDLE;
+                    invencible = false;
+                }
+
+                break;
+
+            case DASHING:
+                float desplazamientoX = dashVelX * delta;
+                player.x += dashHaciaDerecha ? desplazamientoX : -desplazamientoX;
+
+                if (player.x < 0)
+                    player.x = 0;
+
+                if (player.x > 800 - player.width)
+                    player.x = 800 - player.width;
+
+                boolean quiereCancelar = (dashHaciaDerecha && Gdx.input.isKeyPressed(this.keyIzquierda)) ||
+                    (!dashHaciaDerecha && Gdx.input.isKeyPressed(this.keyDerecha));
+
+                boolean animacionDashTerminada = dashAnimation.isAnimationFinished(stateTimer);
+                if (quiereCancelar)
+                    currentState = State.MOVING;
+
+                else if(animacionDashTerminada)
+                    currentState = State.IDLE;
+
+
+                break;
+
+            case IDLE:
+            case MOVING:
+            default:
+
+
+
+                if (Gdx.input.isKeyJustPressed(this.keyDash)) {
+                    currentState = State.DASHING;
+                    dashHaciaDerecha = facingRight;
+                    dashSound.play();
+                    stateTimer = 0f;
+                }
+
+                else {
+                    if (Gdx.input.isKeyPressed(this.keyIzquierda)) {
+                        player.x -= velx * delta;
+                        currentState = State.MOVING;
+                        facingRight = false;
+
+                    }
+
+                    else if (Gdx.input.isKeyPressed(this.keyDerecha)) {
+                        player.x += velx * delta;
+                        currentState = State.MOVING;
+                        facingRight = true;
+                    }
+
+                    else {
+                        if (previousState == State.MOVING || previousState == State.IDLE)
+                            currentState = State.IDLE;
+                    }
+
+
+                    if (player.x < 0)
+                        player.x = 0;
+
+                    if (player.x > 800 - player.width)
+                        player.x = 800 - player.width;
+                }
+                break;
+        }
     }
 
     @Override
-    public void destruir() {
-        // No hacemos nada.
-    }
-
+    public void destruir(){ }
 
     private Animation<TextureRegion> createAnimationFromSheet(Texture sheet, int frameCount, int frameWidth, int frameHeight, float frameDuration) {
-        TextureRegion[][] tmp = TextureRegion.split(sheet,
-            frameWidth,
-            frameHeight);
+
+        TextureRegion[][] tmp = TextureRegion.split(sheet, frameWidth, frameHeight);
 
         TextureRegion[] frames = new TextureRegion[frameCount];
+
         int index = 0;
+
         for (int j = 0; j < frameCount; j++)
+
             frames[index++] = tmp[0][j];
 
         Animation<TextureRegion> animation = new Animation<TextureRegion>(frameDuration, frames);
+
         animation.setPlayMode(Animation.PlayMode.LOOP);
+        if (sheet == sheetRecuperando) {
+            animation.setPlayMode(Animation.PlayMode.NORMAL);
+        }
+
         return animation;
+
     }
+
 }
+

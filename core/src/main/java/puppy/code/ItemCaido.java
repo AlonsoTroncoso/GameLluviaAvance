@@ -55,7 +55,7 @@ public abstract class ItemCaido {
         // Obtener el fotograma actual
         TextureRegion currentFrame = animation.getKeyFrame(stateTimer, true);
 
-        // Dibuja el fotograma en la posición y tamaño del 'area'
+        // Dibuja el fotograma en la posición y tamaño del area
         batch.draw(currentFrame, area.x, area.y, area.width, area.height);
     }
 

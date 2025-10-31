@@ -4,7 +4,7 @@ package puppy.code;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-// Esta es la interfaz. Solo define MÉTODOS, no variables ni código.
+
 public interface IJugador {
 
     // Métodos que GameLluvia necesita en create() y dispose()
@@ -16,6 +16,7 @@ public interface IJugador {
     void actualizarMovimiento();
     void dibujar(SpriteBatch batch);
     boolean estaHerido();
+    boolean estaEnDash();
 
     // Métodos para la UI (Puntos, Vidas, Buffs)
     int getVidas();
@@ -25,8 +26,8 @@ public interface IJugador {
 
     // Métodos que Lluvia e ItemCaido necesitan para colisiones
     Rectangle getArea();
-    void dañar();
+    void dañar(String tipoDano);
     void sumarPuntos(int pp);
     void sumarVida(int cantidad);
-    void activarDoblePuntos(); // (Dejamos esto si no usamos la otra interfaz)
+    void activarDoblePuntos();
 }
