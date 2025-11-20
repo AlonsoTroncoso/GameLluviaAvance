@@ -15,7 +15,7 @@ public class TitleCardScreen implements Screen {
     private final GameLluvia game;
     private final GameLluvia.LevelChoice nivel;
     private final GameLluvia.CharacterChoice personaje;
-
+    private GestorAssets assets;
     private OrthographicCamera camera;
     private Texture titleCardTexture;
     private Sound jingle;
@@ -43,15 +43,16 @@ public class TitleCardScreen implements Screen {
         this.game = game;
         this.nivel = nivel;
         this.personaje = personaje;
+        this.assets = GestorAssets.getInstance();
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
 
         // Selecciona qué imagen y sonido usar
         if (nivel == GameLluvia.LevelChoice.NIVEL_1) {
-            titleCardTexture = game.saloonTitleCard;
-            jingle = game.saloonJingle;
-            logoTexture = game.previewNivel1;
+            titleCardTexture = assets.saloonTitleCard;
+            jingle = assets.saloonJingle;
+            logoTexture = assets.previewNivel1;
             logoWidth = 225;
             logoHeight = 122;
             logoX = 35;
@@ -59,9 +60,9 @@ public class TitleCardScreen implements Screen {
         }
 
         else { // NIVEL 2
-            titleCardTexture = game.golfTitleCard;
-            jingle = game.golfJingle;
-            logoTexture = game.previewNivel2;
+            titleCardTexture = assets.golfTitleCard;
+            jingle = assets.golfJingle;
+            logoTexture = assets.previewNivel2;
             logoWidth = 200;
             logoHeight = 250;
             logoX = 570;
@@ -83,7 +84,7 @@ public class TitleCardScreen implements Screen {
 
 
         Gdx.gl.glEnable(GL20.GL_BLEND);
-       Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         camera.update();
         game.batch.setProjectionMatrix(camera.combined);

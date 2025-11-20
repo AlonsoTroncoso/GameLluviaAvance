@@ -12,11 +12,12 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 
-import java.lang.annotation.Documented;
+
 
 public class CharacterScreen implements Screen {
 
     private final GameLluvia game;
+    private GestorAssets assets;
     private OrthographicCamera camera;
 
     private Texture fondo;
@@ -48,23 +49,23 @@ public class CharacterScreen implements Screen {
 
     public CharacterScreen(GameLluvia game) {
         this.game = game;
+        this.assets = GestorAssets.getInstance();
+        this.fondo = assets.fondoSelectPersonaje;
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
 
-        fondo = game.fondoSelectPersonaje;
 
-        indicadorAnimPeppino = createAnimationFromSheet(game.sheetIndicadorPeppino, 2,
+        indicadorAnimPeppino = createAnimationFromSheet(assets.sheetIndicadorPeppino, 2,
             PEPPINO_INDICADOR_W, PEPPINO_INDICADOR_H,
             INDICADOR_FRAME_DURATION);
 
 
-        indicadorAnimNoise = createAnimationFromSheet(game.sheetIndicadorNoise, 2,
+        indicadorAnimNoise = createAnimationFromSheet(assets.sheetIndicadorNoise, 2,
             NOISE_INDICADOR_W, NOISE_INDICADOR_H,
             INDICADOR_FRAME_DURATION);
 
-        faceAnimPeppino = createAnimationFromSheet(game.sheetFacePeppino, 8, 164, 177, 0.05f);
-        faceAnimNoise = createAnimationFromSheet(game.sheetFaceNoise, 17, 164, 177, 0.05f);
-        sonidoCambio = Gdx.audio.newSound(Gdx.files.internal("menuSFX.wav"));
+        faceAnimPeppino = createAnimationFromSheet(assets.sheetFacePeppino, 8, 164, 177, 0.05f);
+        faceAnimNoise = createAnimationFromSheet(assets.sheetFaceNoise, 17, 164, 177, 0.05f);
         botonAtras = new Rectangle(10, 420, 100, 50);
     }
 
@@ -73,7 +74,7 @@ public class CharacterScreen implements Screen {
         stateTimer += delta;
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.atrasSound.play();
+            assets.atrasSound.play();
             game.setScreen(new MenuPrincipalScreen(game));
             dispose();
             return;
@@ -83,7 +84,7 @@ public class CharacterScreen implements Screen {
 
             if (game.personajeSeleccionado != GameLluvia.CharacterChoice.PERSONAJE_2) {
                 game.personajeSeleccionado = GameLluvia.CharacterChoice.PERSONAJE_2;
-                sonidoCambio.play();
+                assets.cambioSound.play();
             }
 
         }
@@ -93,12 +94,10 @@ public class CharacterScreen implements Screen {
 
             if (game.personajeSeleccionado != GameLluvia.CharacterChoice.PERSONAJE_1) {
                 game.personajeSeleccionado = GameLluvia.CharacterChoice.PERSONAJE_1;
-                sonidoCambio.play();
+                assets.cambioSound.play();
             }
 
         }
-
-
 
         ScreenUtils.clear(0,0,0,1);
         camera.update();
@@ -106,7 +105,7 @@ public class CharacterScreen implements Screen {
         game.batch.begin();
 
         game.batch.draw(fondo, 0, 0, 800, 480);
-        game.font.draw(game.batch, "ATRAS (ESC)", botonAtras.x + 30, botonAtras.y + 30);
+        assets.font.draw(game.batch, "ATRAS (ESC)", botonAtras.x + 30, botonAtras.y + 30);
 
         TextureRegion currentIndicadorFrame;
         TextureRegion currentFaceFrame;
@@ -128,10 +127,7 @@ public class CharacterScreen implements Screen {
         game.batch.end();
     }
 
-    @Override
-    public void dispose() {
-        sonidoCambio.dispose();
-    }
+
 
     private Animation<TextureRegion> createAnimationFromSheet(Texture sheet, int frameCount, int frameWidth, int frameHeight, float frameDuration) {
 
@@ -145,11 +141,11 @@ public class CharacterScreen implements Screen {
         return anim;
     }
 
-   @Override
+    @Override
     public void show() {
-       if (game.musicaMenu != null && !game.musicaMenu.isPlaying())
-           game.musicaMenu.play();
-   }
+        if (assets.musicaMenu != null && !assets.musicaMenu.isPlaying())
+            assets.musicaMenu.play();
+    }
 
     @Override
     public void pause() {}
@@ -159,6 +155,10 @@ public class CharacterScreen implements Screen {
 
     @Override
     public void hide() {}
+
+    @Override
+    public void dispose() {
+    }
 
     @Override
     public void resize(int width, int height) {}

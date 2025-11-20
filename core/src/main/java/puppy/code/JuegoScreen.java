@@ -17,16 +17,10 @@ public class JuegoScreen implements Screen {
 
     private final GameLluvia game;
     private OrthographicCamera camera;
-
-    // Fondos del juego
-    private Texture backgroundFrame1, backgroundFrame2, backgroundGolf, floorGolf, homeGolf, adGolf,
-    floorSaloon, dontGrabTheMeatBall, bigBeer, heno, pizzaSmart;
+    private GestorAssets assets;
     private float animationTimer;
     private final float duracionFotograma = 0.1f;
 
-    // Sheets de Items
-    private Texture sheetComida1, sheetComida2, sheetComida3, sheetComida4, sheetComida5, sheetItemHostil, sheetDoblePuntos,
-        sheetAntorchaHostil, sheetVidaNoise, sheetVidaPeppino, sheetHurtNoise, sheetHurtPeppino;
 
     private IJugador jugador;
     private Lluvia lluvia;
@@ -40,47 +34,26 @@ public class JuegoScreen implements Screen {
     public JuegoScreen(GameLluvia game, GameLluvia.CharacterChoice personajeElegido) {
 
         this.game = game;
-        sheetComida1 = game.sheetComida1;
-        sheetComida2 = game.sheetComida2;
-        sheetComida3 = game.sheetComida3;
-        sheetComida4 = game.sheetComida4;
-        sheetComida5 = game.sheetComida5;
-        sheetItemHostil = game.sheetItemHostil;
-        sheetAntorchaHostil = game.sheetAntorchaHostil;
-        sheetDoblePuntos = game.sheetDoblePuntos;
-        sheetVidaNoise = game.sheetVidaNoise;
-        sheetVidaPeppino = game.sheetVidaPeppino;
-        sheetHurtNoise = game.sheetHurtNoise;
-        sheetHurtPeppino = game.sheetHurtPeppino;
+        this.assets = GestorAssets.getInstance();
 
         if(game.nivelSeleccionado == GameLluvia.LevelChoice.NIVEL_1) {
-            backgroundFrame1 = new Texture(Gdx.files.internal("fastFoodSaloon1.png"));
-            backgroundFrame2 = new Texture(Gdx.files.internal("fastFoodSaloon2.png"));
-            floorSaloon = game.floorSaloon;
-            dontGrabTheMeatBall = game.dontGrabTheMeatBall;
-            heno = game.heno;
-            bigBeer = game.bigBeer;
-            pizzaSmart = game.pizzaSmart;
+            musicaNivel = assets.musicaNivelSaloon;
             int meatBallFrameCount = 16;
             int frameWidth = 128;
             int frameHeight = 128;
 
-            meatBallAnimation = createAnimationFromSheet(game.sheetMeatBall,
+            meatBallAnimation = createAnimationFromSheet(assets.sheetMeatBall,
                 meatBallFrameCount, frameWidth, frameHeight, 0.05f);
 
         }
 
         else {
-            backgroundGolf = new Texture(Gdx.files.internal("golf.png"));
-            floorGolf = game.floorGolf;
-            homeGolf = game.homeGolf;
-            adGolf = game.adGolf;
-
+            musicaNivel = assets.musicaNivelGolf;
             int greaseBallFrameCount = 12;
             int frameWidth = 100;
             int frameHeight = 100;
 
-            greaseBallAnimation =  createAnimationFromSheet(game.sheetIdleGreaseball,
+            greaseBallAnimation =  createAnimationFromSheet(assets.sheetIdleGreaseball,
                 greaseBallFrameCount, frameWidth, frameHeight, 0.05f);
 
 
@@ -88,66 +61,60 @@ public class JuegoScreen implements Screen {
 
         animationTimer = 0f;
 
-        Sound dropSound = Gdx.audio.newSound(Gdx.files.internal("comer.mp3"));
-
-        Sound powerupSound = Gdx.audio.newSound(Gdx.files.internal("doublePoints.wav"));
-
-        if (game.nivelSeleccionado == GameLluvia.LevelChoice.NIVEL_1)
-            musicaNivel = Gdx.audio.newMusic(Gdx.files.internal("yeehaw.mp3"));
-
-         else // NIVEL_2
-            musicaNivel = Gdx.audio.newMusic(Gdx.files.internal("goodEatin.mp3"));
-
         musicaNivel.setLooping(true);
         if (personajeElegido == GameLluvia.CharacterChoice.PERSONAJE_1) {
             jugador = new Noise(
-                game.idleSheetP1,
-                game.moveSheetP1,
-                game.sheetQuemadoP1,
-                game.sheetRecuperandoseP1,
-                game.sheetHurtNoise,
-                game.sheetDashNoise,
-                game.hurtNoiseSound,
-                game.vidaNoiseSound,
-                game.vidaNoiseSound2,
-                game.vidaNoiseSound3,
-                game.vidaNoiseSound4,
-                game.vidaNoiseSound5,
-                game.burningNoiseSound,
-                game.dashSound,
-                game.sonidoGolpeNoise,
-                game.hurtNoiseSound2,
+                assets.idleSheetP1,
+                assets.moveSheetP1,
+                assets.sheetQuemadoP1,
+                assets.sheetRecuperandoseP1,
+                assets.sheetHurtNoise,
+                assets.sheetDashNoise,
+                assets.hurtNoiseSound,
+                assets.vidaNoiseSound,
+                assets.vidaNoiseSound2,
+                assets.vidaNoiseSound3,
+                assets.vidaNoiseSound4,
+                assets.vidaNoiseSound5,
+                assets.burningNoiseSound,
+                assets.dashSound,
+                assets.sonidoGolpeNoise,
+                assets.hurtNoiseSound2,
                 Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.X
             );
         }
 
         else {
             jugador = new Peppino(
-                game.idleSheetP2,
-                game.moveSheetP2,
-                game.sheetQuemadoP2,
-                game.sheetRecuperandoseP2,
-                game.sheetHurtPeppino,
-                game.sheetDashPeppino,
-                game.hurtPeppinoSound,
-                game.vidaPeppinoSound,
-                game.vidaPeppinoSound2,
-                game.vidaPeppinoSound3,
-                game.burningPeppinoSound,
-                game.burningPeppinoSound2,
-                game.burningPeppinoSound3,
-                game.dashSound,
-                game.sonidoGolpe,
-                game.hurtPeppinoSound2,
+                assets.idleSheetP2,
+                assets.moveSheetP2,
+                assets.sheetQuemadoP2,
+                assets.sheetRecuperandoseP2,
+                assets.sheetHurtPeppino,
+                assets.sheetDashPeppino,
+                assets.hurtPeppinoSound,
+                assets.vidaPeppinoSound,
+                assets.vidaPeppinoSound2,
+                assets.vidaPeppinoSound3,
+                assets.burningPeppinoSound,
+                assets.burningPeppinoSound2,
+                assets.burningPeppinoSound3,
+                assets.dashSound,
+                assets.sonidoGolpe,
+                assets.hurtPeppinoSound2,
                 Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.X
             );
         }
 
-        // Creación de Lluvia
-        CreadorItems creadorItems = new CreadorItems(
-            sheetComida1, sheetComida2, sheetComida3, sheetComida4, sheetComida5,
-            sheetItemHostil, sheetAntorchaHostil,sheetDoblePuntos, sheetVidaNoise, sheetVidaPeppino,
-            personajeElegido, dropSound, powerupSound);
+        //Aplicacion de Strategy
+        IEstrategiaGeneracion estrategiaNivel;
+
+        if (game.nivelSeleccionado == GameLluvia.LevelChoice.NIVEL_1)
+            estrategiaNivel = new EstrategiaSaloon(); // Estrategia Fácil
+        else
+            estrategiaNivel = new EstrategiaGolf();   // Estrategia Difícil
+
+        CreadorItems creadorItems = new CreadorItems(personajeElegido, estrategiaNivel);
 
         lluvia = new Lluvia(creadorItems);
 
@@ -178,23 +145,23 @@ public class JuegoScreen implements Screen {
             TextureRegion currentMeatBallFrame = meatBallAnimation.getKeyFrame(meatBallTimer, true);
 
             if (animationTimer < duracionFotograma) {
-                game.batch.draw(backgroundFrame1, 0, 0, 800, 480);
-                game.batch.draw(floorSaloon, 0, 0, 800, 30);
-                game.batch.draw(dontGrabTheMeatBall, 10, 30, 172, 167);
+                game.batch.draw(assets.saloonBG1, 0, 0, 800, 480);
+                game.batch.draw(assets.floorSaloon, 0, 0, 800, 30);
+                game.batch.draw(assets.dontGrabTheMeatBall, 10, 30, 172, 167);
                 game.batch.draw(currentMeatBallFrame, 185, -2, 128, 128);
-                game.batch.draw(heno, 720, 25, 73, 76);
-                game.batch.draw(bigBeer,680, 30, 26, 47);
-                game.batch.draw(pizzaSmart, 300, 30, 361, 276);
+                game.batch.draw(assets.heno, 720, 25, 73, 76);
+                game.batch.draw(assets.bigBeer,680, 30, 26, 47);
+                game.batch.draw(assets.pizzaSmart, 300, 30, 361, 276);
             }
 
             else {
-                game.batch.draw(backgroundFrame2, 0, 0, 800, 480);
-                game.batch.draw(floorSaloon, 0, 0, 800, 30);
-                game.batch.draw(dontGrabTheMeatBall, 10, 30, 172, 167);
+                game.batch.draw(assets.saloonBG2, 0, 0, 800, 480);
+                game.batch.draw(assets.floorSaloon, 0, 0, 800, 30);
+                game.batch.draw(assets.dontGrabTheMeatBall, 10, 30, 172, 167);
                 game.batch.draw(currentMeatBallFrame, 185, -2, 128, 128);
-                game.batch.draw(heno, 720, 25, 73, 76);
-                game.batch.draw(bigBeer,680, 30, 26, 47);
-                game.batch.draw(pizzaSmart, 300, 30, 361, 276);
+                game.batch.draw(assets.heno, 720, 25, 73, 76);
+                game.batch.draw(assets.bigBeer,680, 30, 26, 47);
+                game.batch.draw(assets.pizzaSmart, 300, 30, 361, 276);
             }
         }
 
@@ -204,21 +171,21 @@ public class JuegoScreen implements Screen {
             if (!currentGreaseBallAnimation.isFlipX())
                 currentGreaseBallAnimation.flip(true, false);
 
-            game.batch.draw(backgroundGolf, 0, 0, 800, 480);
-            game.batch.draw(floorGolf, 0, 0, 800, 30);
-            game.batch.draw(homeGolf, 0, 30, 160, 222);
-            game.batch.draw(adGolf, 300, 30, 206, 228);
+            game.batch.draw(assets.golfBG, 0, 0, 800, 480);
+            game.batch.draw(assets.floorGolf, 0, 0, 800, 30);
+            game.batch.draw(assets.homeGolf, 0, 30, 160, 222);
+            game.batch.draw(assets.adGolf, 300, 30, 206, 228);
             game.batch.draw(currentGreaseBallAnimation, 630, 25, 100, 100);
         }
 
 
         if(jugador.getVidas() > 0) {
             // ESTADO JUGANDO
-            game.font.draw(game.batch, "Puntos: " + jugador.getPuntos(), 5, 475);
-            game.font.draw(game.batch, "Vidas: " + jugador.getVidas(), 5, 455);
+            assets.font.draw(game.batch, "Puntos: " + jugador.getPuntos(), 5, 475);
+            assets.font.draw(game.batch, "Vidas: " + jugador.getVidas(), 5, 455);
 
             if(jugador.estaDoblePuntos())
-                game.font.draw(game.batch, "2XP: " + String.format("%.1f", jugador.getTiempoDoblePuntos()), 150, 475);
+                assets.font.draw(game.batch, "2XP: " + String.format("%.1f", jugador.getTiempoDoblePuntos()), 150, 475);
 
             if (!jugador.estaHerido()) {
                 jugador.actualizarMovimiento();
@@ -231,9 +198,9 @@ public class JuegoScreen implements Screen {
 
         } else {
             // ESTADO GAME OVER
-            game.font.draw(game.batch, "GAME OVER", 360, 280);
-            game.font.draw(game.batch, "Puntaje Final: " +jugador.getPuntos(), 350, 250);
-            game.font.draw(game.batch, "Presiona R para reiniciar", 330, 190);
+            assets.font.draw(game.batch, "GAME OVER", 360, 280);
+            assets.font.draw(game.batch, "Puntaje Final: " +jugador.getPuntos(), 350, 250);
+            assets.font.draw(game.batch, "Presiona R para reiniciar", 330, 190);
 
             if (musicaNivel != null && musicaNivel.isPlaying())
                 musicaNivel.stop();
@@ -272,19 +239,8 @@ public class JuegoScreen implements Screen {
 
         jugador.destruir();
 
-        if (backgroundFrame1 != null)
-            backgroundFrame1.dispose();
-
-        if (backgroundFrame2 != null)
-            backgroundFrame2.dispose();
-
-        if (backgroundGolf != null)
-            backgroundGolf.dispose();
-
-
-
         if (musicaNivel != null)
-            musicaNivel.dispose();
+            musicaNivel.stop();
 
     }
 

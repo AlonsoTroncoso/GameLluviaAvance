@@ -3,16 +3,14 @@ package puppy.code;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.audio.Sound;
 
-public class Vida extends ItemPowerUp {
+public class Vida extends ItemCaido {
 
-    public Vida(Texture sheet, Sound vidaSound) {
-        super(sheet, 18, 100, 100, 0.1f, 200f, vidaSound);
+    public Vida(Texture sheet) {
+        super(sheet, 18, 100, 100, 0.1f, 200f);
+
     }
 
-    //entonces asi no repito tanto codigo sacando el onHit y metiendo solo el aplicar efecto
-    @Override
-    public void aplicarEfecto(IJugador jugador){
+    public void onHit(IJugador jugador) {
         jugador.sumarVida(1);
     }
 }
-

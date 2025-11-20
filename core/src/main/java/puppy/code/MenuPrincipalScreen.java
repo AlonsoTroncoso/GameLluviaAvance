@@ -3,9 +3,7 @@ package puppy.code;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -14,37 +12,25 @@ public class MenuPrincipalScreen implements Screen {
 
     private final GameLluvia game;
     private OrthographicCamera camera;
+    private GestorAssets assets;
 
-    private Texture fondoJugar;
-    private Texture fondoCambiar;
-    private Texture fondoSalir;
-    private Sound sonidoSeleccion;
 
     private int opcionSeleccionada; // 0 = Jugar, 1 = Cambiar, 2 = Salir
 
 
     public MenuPrincipalScreen(GameLluvia game) {
         this.game = game;
+        this.assets = GestorAssets.getInstance();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
-
-
-        fondoJugar = new Texture(Gdx.files.internal("backgroundMenu1.png"));
-        fondoCambiar = new Texture(Gdx.files.internal("backgroundMenu3.png"));
-        fondoSalir = new Texture(Gdx.files.internal("backgroundMenu2.png"));
-
-
-        sonidoSeleccion = Gdx.audio.newSound(Gdx.files.internal("menuSFX.wav"));
-
-
         opcionSeleccionada = 0;
     }
 
     @Override
     public void show() {
 
-        if (game.musicaMenu!=null && !game.musicaMenu.isPlaying()) {
-            game.musicaMenu.play();
+        if (assets.musicaMenu!=null && !assets.musicaMenu.isPlaying()) {
+            assets.musicaMenu.play();
         }
     }
 
@@ -64,7 +50,7 @@ public class MenuPrincipalScreen implements Screen {
             opcionSeleccionada = Math.min(2, opcionSeleccionada + 1);
 
         if (opcionAnterior != opcionSeleccionada)
-            sonidoSeleccion.play();
+            assets.cambioSound.play();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             switch (opcionSeleccionada) {
@@ -88,13 +74,13 @@ public class MenuPrincipalScreen implements Screen {
 
 
         if (opcionSeleccionada == 0)
-            game.batch.draw(fondoJugar, 0, 0, 800, 480);
+            game.batch.draw(assets.fondoMenu1, 0, 0, 800, 480);
 
         else if (opcionSeleccionada == 1)
-            game.batch.draw(fondoCambiar, 0, 0, 800, 480);
+            game.batch.draw(assets.fondoMenu3, 0, 0, 800, 480);
 
         else
-             game.batch.draw(fondoSalir, 0, 0, 800, 480);
+            game.batch.draw(assets.fondoMenu2, 0, 0, 800, 480);
 
 
         game.batch.end();
@@ -102,12 +88,6 @@ public class MenuPrincipalScreen implements Screen {
 
     @Override
     public void dispose() {
-
-        fondoJugar.dispose();
-        fondoCambiar.dispose();
-        fondoSalir.dispose();
-        sonidoSeleccion.dispose();
-
     }
 
 

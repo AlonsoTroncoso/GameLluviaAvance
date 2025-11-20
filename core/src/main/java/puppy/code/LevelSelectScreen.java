@@ -5,7 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color; // <-- ¡IMPORTANTE!
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -14,7 +14,7 @@ public class LevelSelectScreen implements Screen {
 
     private final GameLluvia game;
     private OrthographicCamera camera;
-    private Texture fondoSeleccionNivel;
+    private GestorAssets assets;
     private Rectangle botonAtras;
 
     // Nivel 1 (Fastfood Saloon)
@@ -44,9 +44,9 @@ public class LevelSelectScreen implements Screen {
     public LevelSelectScreen(GameLluvia game) {
 
         this.game = game;
+        this.assets = GestorAssets.getInstance();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
-        fondoSeleccionNivel = new Texture(Gdx.files.internal("characterScreen.png"));
         botonAtras = new Rectangle(10, 420, 100, 50);
     }
 
@@ -59,7 +59,7 @@ public class LevelSelectScreen implements Screen {
         if (currentState == State.SELECTING) {
 
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-                game.atrasSound.play();
+                assets.atrasSound.play();
                 game.setScreen(new MenuPrincipalScreen(game));
                 dispose();
                 return;
@@ -69,14 +69,14 @@ public class LevelSelectScreen implements Screen {
             if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
                 if (game.nivelSeleccionado != GameLluvia.LevelChoice.NIVEL_1) {
                     game.nivelSeleccionado = GameLluvia.LevelChoice.NIVEL_1;
-                    game.cambioSound.play();
+                    assets.cambioSound.play();
                 }
             }
 
             if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
                 if (game.nivelSeleccionado != GameLluvia.LevelChoice.NIVEL_2) {
                     game.nivelSeleccionado = GameLluvia.LevelChoice.NIVEL_2;
-                    game.cambioSound.play();
+                    assets.cambioSound.play();
                 }
             }
 
@@ -89,7 +89,7 @@ public class LevelSelectScreen implements Screen {
                 camera.unproject(touchPos);
 
                 if (botonAtras.contains(touchPos.x, touchPos.y)) {
-                    game.atrasSound.play();
+                    assets.atrasSound.play();
                     game.setScreen(new MenuPrincipalScreen(game));
                     dispose();
                 }
@@ -114,7 +114,7 @@ public class LevelSelectScreen implements Screen {
 
 
             if (confirmationTimer >= CONFIRMATION_DURATION) {
-                game.musicaMenu.stop();
+                assets.musicaMenu.stop();
 
                 // Va a la Title Card
                 game.setScreen(new TitleCardScreen(game, nivelConfirmado, game.personajeSeleccionado));
@@ -124,15 +124,15 @@ public class LevelSelectScreen implements Screen {
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.atrasSound.play();
+            assets.atrasSound.play();
             game.setScreen(new MenuPrincipalScreen(game));
             dispose();
             return;
         }
 
         game.batch.begin();
-        game.batch.draw(fondoSeleccionNivel, 0, 0, 800, 480);
-        game.font.draw(game.batch, "ATRAS (ESC)", botonAtras.x + 20, botonAtras.y + 30);
+        game.batch.draw(assets.fondoLevelSelect, 0, 0, 800, 480);
+        assets.font.draw(game.batch, "ATRAS (ESC)", botonAtras.x + 20, botonAtras.y + 30);
         boolean isVisible = true;
 
         if (currentState == State.CONFIRMING) {
@@ -148,15 +148,15 @@ public class LevelSelectScreen implements Screen {
             else
                 game.batch.setColor(Color.WHITE);
 
-            game.batch.draw(game.previewNivel1, NIVEL1_X, NIVEL1_Y, NIVEL1_W, NIVEL1_H);
+            game.batch.draw(assets.previewNivel1, NIVEL1_X, NIVEL1_Y, NIVEL1_W, NIVEL1_H);
             game.batch.setColor(Color.GRAY);
-            game.batch.draw(game.previewNivel2, NIVEL2_X, NIVEL2_Y, NIVEL2_W, NIVEL2_H);
+            game.batch.draw(assets.previewNivel2, NIVEL2_X, NIVEL2_Y, NIVEL2_W, NIVEL2_H);
 
         }
 
         else {
             game.batch.setColor(Color.GRAY);
-            game.batch.draw(game.previewNivel1, NIVEL1_X, NIVEL1_Y, NIVEL1_W, NIVEL1_H);
+            game.batch.draw(assets.previewNivel1, NIVEL1_X, NIVEL1_Y, NIVEL1_W, NIVEL1_H);
 
             if(currentState == State.CONFIRMING && !isVisible)
                 game.batch.setColor(Color.BLACK);
@@ -164,7 +164,7 @@ public class LevelSelectScreen implements Screen {
             else
                 game.batch.setColor(Color.WHITE);
 
-            game.batch.draw(game.previewNivel2, NIVEL2_X, NIVEL2_Y, NIVEL2_W, NIVEL2_H);
+            game.batch.draw(assets.previewNivel2, NIVEL2_X, NIVEL2_Y, NIVEL2_W, NIVEL2_H);
         }
 
 
@@ -177,7 +177,7 @@ public class LevelSelectScreen implements Screen {
             camera.unproject(touchPos);
 
             if (botonAtras.contains(touchPos.x, touchPos.y)) {
-                game.atrasSound.play();
+                assets.atrasSound.play();
                 game.setScreen(new MenuPrincipalScreen(game));
                 dispose();
             }
@@ -185,7 +185,7 @@ public class LevelSelectScreen implements Screen {
             Rectangle hitboxNivel1 = new Rectangle(NIVEL1_X, NIVEL1_Y, NIVEL1_W, NIVEL1_H);
             if (hitboxNivel1.contains(touchPos.x, touchPos.y)) {
                 game.nivelSeleccionado = GameLluvia.LevelChoice.NIVEL_1;
-                game.musicaMenu.stop();
+                assets.musicaMenu.stop();
                 game.setScreen(new TitleCardScreen(game, game.nivelSeleccionado, game.personajeSeleccionado));
                 dispose();
             }
@@ -194,7 +194,7 @@ public class LevelSelectScreen implements Screen {
             Rectangle hitboxNivel2 = new Rectangle(NIVEL2_X, NIVEL2_Y, NIVEL2_W, NIVEL2_H);
             if (hitboxNivel2.contains(touchPos.x, touchPos.y)) {
                 game.nivelSeleccionado = GameLluvia.LevelChoice.NIVEL_2;
-                game.musicaMenu.stop();
+                assets.musicaMenu.stop();
                 game.setScreen(new TitleCardScreen(game, game.nivelSeleccionado, game.personajeSeleccionado));
                 dispose();
             }
@@ -205,20 +205,18 @@ public class LevelSelectScreen implements Screen {
         if (currentState == State.SELECTING) {
             currentState = State.CONFIRMING;
             nivelConfirmado = game.nivelSeleccionado;
-            game.confimarSound.play();
+            assets.confimarSound.play();
             confirmationTimer = 0f;
         }
     }
 
     @Override
     public void dispose() {
-        fondoSeleccionNivel.dispose();
-
     }
 
     @Override public void show() {
-        if (game.musicaMenu != null && !game.musicaMenu.isPlaying())
-            game.musicaMenu.play();
+        if (assets.musicaMenu != null && !assets.musicaMenu.isPlaying())
+            assets.musicaMenu.play();
     }
 
     @Override public void resize(int width, int height) {}
